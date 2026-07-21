@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CpE Freelance | Real-Time Marketplace</title>
+  <meta name="description" content="A real-time freelance board for CpE students featuring Google Authentication, applicant queues, and live chat.">
+  
+  <!-- Premium Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  
+  <!-- Firebase SDKs (using compat version for easy script loading without build tools) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <!-- Link to External Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Background Decorative Glow -->
+  <div class="glow-bg"></div>
+
+  <!-- LOGIN SCREEN OVERLAY -->
+  <div id="login-overlay" class="auth-overlay">
+    <div class="auth-card">
+      <div class="auth-logo">CpE Freelance</div>
+      <h1>Collaborative Marketplace</h1>
+      <p>Log in to post tasks, apply for quick gigs, and collaborate in real-time with other CpE students.</p>
+      
+      <!-- Name Login Form -->
+      <form id="login-form">
+        <div class="form-group" style="text-align: left; margin-bottom: 1.5rem;">
+          <label for="username-input" style="margin-bottom: 0.5rem; display: block;">Your Name</label>
+          <input type="text" id="username-input" class="form-control" placeholder="e.g. Alice" required style="width: 100%;">
+        </div>
+        <button type="submit" class="btn btn-primary auth-btn" style="margin-bottom: 0;">
+          <span class="btn-icon">🚀</span> Enter Marketplace
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- NAVIGATION -->
+  <header>
+    <div class="container nav-container">
+      <a href="#" class="logo">CpE Freelance</a>
+      
+      <!-- User Profile Header (Hidden until logged in) -->
+      <div id="user-profile-header" class="user-header-info" style="display: none;">
+        <span id="user-avatar" class="user-profile-avatar">👤</span>
+        <span id="user-display-name" class="user-profile-name">Loading...</span>
+        <button id="logout-btn" class="btn-logout">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section id="hero">
+    <div class="container">
+      <h1>Collaborative <span>Quick Tasks</span></h1>
+      <p>Post small tasks, set short timeframes in minutes or hours, and hire peers to fulfill them.</p>
+    </div>
+  </section>
+
+  <!-- APPLICATION CONTAINER -->
+  <main class="container">
+    <div class="app-grid">
+      
+      <!-- LEFT COLUMN: Post a Job Form -->
+      <section class="form-panel">
+        <h2>Post a Quick Job</h2>
+        
+        <form id="cpe-job-form" class="job-form">
+          <div class="form-group">
+            <label for="job-name">Job Name</label>
+            <input type="text" id="job-name" class="form-control" placeholder="e.g. Code Arduino LED controller" required>
+          </div>
+          
+          <div class="form-group">
+            <label>Estimated Job Duration</label>
+            <!-- Redesigned Hour/Minute Selector -->
+            <div class="duration-input-group">
+              <input type="number" id="job-duration" class="form-control" placeholder="Value" min="1" required>
+              <select id="job-duration-unit" class="form-control">
+                <option value="Minutes">Minutes</option>
+                <option value="Hours" selected>Hours</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="job-description">Job Description</label>
+            <textarea id="job-description" class="form-control" placeholder="Detail the schematic, files needed, or physical assembly requirements..." required></textarea>
+          </div>
+          
+          <button type="submit" class="btn btn-primary" id="btn-post-job">Post Task</button>
+        </form>
+      </section>
+
+      <!-- RIGHT COLUMN: Available Jobs Board -->
+      <section class="board-panel">
+        <div class="board-header">
+          <h2>Task Marketplace</h2>
+          <!-- Dynamic Job Counter Badge -->
+          <span class="job-count-badge" id="job-count">0</span>
+        </div>
+
+        <!-- Empty State (Shown when there are no jobs) -->
+        <div class="empty-state" id="empty-state">
+          <span class="empty-icon">📁</span>
+          <h3>No tasks posted yet</h3>
+          <p>Login to post a task, or wait for others to list tasks in the marketplace!</p>
+        </div>
+
+        <!-- Jobs List Container (Dynamically populated by JS) -->
+        <div class="jobs-list" id="jobs-list">
+          <!-- Dynamic job cards will insert here -->
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- CHAT SYSTEM INTERFACE (Hidden by default, overlays bottom right) -->
+  <div id="chat-widget" class="chat-overlay" style="display: none;">
+    <div class="chat-header">
+      <div class="chat-title-info">
+        <span class="chat-status-dot"></span>
+        <h3 id="chat-partner-name">Chat</h3>
+        <p id="chat-job-title">Job Title</p>
+      </div>
+      <button id="close-chat-btn" class="chat-close-btn">&times;</button>
+    </div>
+    
+    <!-- Messages viewport -->
+    <div id="chat-messages" class="chat-body">
+      <!-- Chat bubbles inserted here -->
+    </div>
+    
+    <!-- Input box -->
+    <form id="chat-send-form" class="chat-footer">
+      <input type="text" id="chat-input" class="form-control chat-input-control" placeholder="Type a message..." required autocomplete="off">
+      <button type="submit" class="chat-send-btn">📨</button>
+    </form>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 CpE Freelance Platform. Real-time Firebase application.</p>
+    </div>
+  </footer>
+
+  <!-- Link to External JavaScript -->
+  <script src="script.js"></script>
+</body>
+</html>
