@@ -6,12 +6,13 @@
 // 1. FIREBASE CONFIGURATION (ENTER YOUR KEYS HERE TO GO LIVE)
 // -------------------------------------------------------------
 const firebaseConfig = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
+  apiKey: "AIzaSyD4Js1lZ1SSLiAv6JiHevau5TlIdA2vzVY",
+  authDomain: "freelance-9d09d.firebaseapp.com",
+  projectId: "freelance-9d09d",
+  storageBucket: "freelance-9d09d.firebasestorage.app",
+  messagingSenderId: "133455816148",
+  appId: "1:133455816148:web:81ae5e50d658faabd6a241",
+  measurementId: "G-SET64JC8HH"
 };
 
 // Initialize Firebase App
