@@ -315,7 +315,7 @@ header {
 /* Redesigned Quick-Job Duration Input Group */
 .duration-input-group {
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
+  grid-template-columns: 2.2fr 1fr;
   gap: 0.8rem;
 }
 

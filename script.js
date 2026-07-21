@@ -115,6 +115,9 @@ function initializeDatabaseListeners() {
       firebaseJobs.push({ id: doc.id, ...doc.data() });
     });
     updateJobsUI(firebaseJobs);
+  }, error => {
+    console.error("Firestore onSnapshot error: ", error);
+    alert("Firebase Database Error: " + error.message + "\n\nTip: Please verify that you configured your Cloud Firestore Security Rules to allow public reads and writes during development!");
   });
 }
 
@@ -134,7 +137,14 @@ function postJob(name, duration, durationUnit, description) {
     createdAt: Date.now()
   };
 
-  db.collection('jobs').add(newJobData);
+  db.collection('jobs').add(newJobData)
+    .then((docRef) => {
+      console.log("Job posted successfully with ID: ", docRef.id);
+    })
+    .catch(error => {
+      console.error("Error posting job to Firestore: ", error);
+      alert("Failed to post job: " + error.message + "\n\nTip: Ensure your Cloud Firestore Security Rules permit public writes during development!");
+    });
 }
 
 // Seeker applies for job
@@ -154,6 +164,13 @@ function applyForJob(jobId) {
         transaction.update(jobRef, { applicants: applicants });
       }
     });
+  })
+  .then(() => {
+    console.log("Application transaction completed successfully.");
+  })
+  .catch(error => {
+    console.error("Application transaction failed: ", error);
+    alert("Failed to apply for job: " + error.message);
   });
 }
 
@@ -163,6 +180,13 @@ function approveSeeker(jobId, seekerEmail, seekerName) {
     status: 'progress',
     seekerEmail: seekerEmail,
     seekerName: seekerName
+  })
+  .then(() => {
+    console.log("Seeker approved successfully.");
+  })
+  .catch(error => {
+    console.error("Error approving seeker: ", error);
+    alert("Failed to approve seeker: " + error.message);
   });
 }
 
@@ -312,6 +336,9 @@ function openChat(jobId, partnerEmail, partnerName, jobTitle) {
         messages.push(doc.data());
       });
       updateChatUI(messages);
+    }, error => {
+      console.error("Chat onSnapshot error: ", error);
+      alert("Failed to load chat messages: " + error.message);
     });
 }
 
@@ -334,7 +361,11 @@ function sendChatMessage(text) {
     timestamp: Date.now()
   };
 
-  db.collection('chats').add(msgData);
+  db.collection('chats').add(msgData)
+    .catch(error => {
+      console.error("Error sending chat message: ", error);
+      alert("Failed to send message: " + error.message);
+    });
 }
 
 function updateChatUI(messages) {
