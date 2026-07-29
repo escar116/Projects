@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CpE FREELANCE - Task Marketplace</title>
+  <meta name="description" content="Next-gen freelance marketplace featuring Google Auth, real-time task posting, applicant queue, automated chat system, and mutual review ratings.">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="bg-glow-1"></div>
+  <div class="bg-glow-2"></div>
+
+  <div class="app-container" id="app-main-container">
+    
+    <aside class="sidebar">
+      <div>
+        <div class="brand-section">
+          <div class="brand-text">
+            <span class="brand-title">CpE FREELANCE</span>
+          </div>
+        </div>
+
+        <ul class="nav-menu">
+          <li class="nav-item">
+            <button class="nav-btn active" data-tab="jobs-view" id="nav-jobs">
+              <div class="nav-btn-content">
+                <span>Job Hunt</span>
+              </div>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-btn" data-tab="my-jobs-view" id="nav-my-jobs">
+              <div class="nav-btn-content">
+                <span>My Jobs</span>
+              </div>
+              <span class="nav-badge" id="my-jobs-badge">0</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-btn" data-tab="post-job-view" id="nav-post">
+              <div class="nav-btn-content">
+                <span>Post Job</span>
+              </div>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-btn" data-tab="chats-view" id="nav-chats">
+              <div class="nav-btn-content">
+                <span>Chats</span>
+              </div>
+              <span class="nav-badge" id="chats-badge">0</span>
+            </button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-btn" data-tab="profile-view" id="nav-profile">
+              <div class="nav-btn-content">
+                <span>Profile</span>
+              </div>
+            </button>
+          </li>
+        </ul>
+      </div>
+
+      <div class="user-switch-section">
+        <div class="current-user-card" id="current-user-card">
+          <div class="user-mini-info">
+            <div class="user-mini-avatar" id="sidebar-user-avatar"></div>
+            <div style="overflow: hidden;">
+              <div class="user-mini-name" id="sidebar-user-name">Loading...</div>
+              <div class="user-mini-role" id="sidebar-user-role">Active Account</div>
+            </div>
+          </div>
+          <button class="btn btn-secondary btn-sm" id="sidebar-logout-btn" style="padding: 0.35rem 0.6rem; font-size: 0.75rem;">Logout</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+
+      <section id="jobs-view" class="tab-view active">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h1>Job Marketplace</h1>
+            <p>Browse open tasks available in the community, filter by duration, or apply instantly.</p>
+          </div>
+          <button class="btn btn-primary" onclick="switchTab('post-job-view')">Post New Job</button>
+        </div>
+
+        <div class="controls-bar">
+          <div class="search-box">
+            <input type="text" id="job-search-input" class="form-control search-input" placeholder="Search open tasks by title or keyword...">
+          </div>
+
+          <div class="filter-pills" id="duration-filter-group">
+            <button class="filter-pill active" data-filter="all">All Jobs</button>
+            <button class="filter-pill" data-filter="quick">Quick (&lt;30m)</button>
+            <button class="filter-pill" data-filter="medium">Medium (30m - 2h)</button>
+            <button class="filter-pill" data-filter="long">Long (2h+)</button>
+          </div>
+        </div>
+
+        <div class="jobs-grid" id="jobs-grid-container"></div>
+      </section>
+
+      <section id="my-jobs-view" class="tab-view">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h1>My Jobs & Applications</h1>
+            <p>Manage your applied tasks, ongoing approved contracts, and uncompleted posted jobs.</p>
+          </div>
+        </div>
+
+        <div class="my-jobs-section">
+          <h2 class="section-title">Ongoing Approved Jobs</h2>
+          <div class="jobs-grid" id="ongoing-jobs-container"></div>
+        </div>
+
+        <div class="my-jobs-section" style="margin-top: 2rem;">
+          <h2 class="section-title">Applied Jobs (Pending Approval)</h2>
+          <div class="jobs-grid" id="applied-jobs-container"></div>
+        </div>
+
+        <div class="my-jobs-section" style="margin-top: 2rem;">
+          <h2 class="section-title">My Posted Jobs (Unfinished)</h2>
+          <div class="jobs-grid" id="posted-jobs-container"></div>
+        </div>
+      </section>
+
+      <section id="post-job-view" class="tab-view">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h1>Post a Quick Task</h1>
+            <p>Define task requirements and specify duration in minutes or hours.</p>
+          </div>
+        </div>
+
+        <div class="post-job-container">
+          <form id="post-job-form">
+            <div class="form-group">
+              <label class="form-label" for="job-title-input">Job Name / Title</label>
+              <input type="text" id="job-title-input" class="form-control" placeholder="e.g. Build Responsive Landing Page Section" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Estimated Duration</label>
+              <div class="duration-selector-row">
+                <input type="number" id="job-duration-val" class="form-control" placeholder="e.g. 45" min="1" required>
+                <select id="job-duration-unit" class="form-control">
+                  <option value="Minutes">Minutes</option>
+                  <option value="Hours" selected>Hours</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="job-desc-input">Job Description & Requirements</label>
+              <textarea id="job-desc-input" class="form-control" placeholder="Describe the goal, deliverables, and any relevant details..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 0.5rem;">
+              <span>Post Job to Marketplace</span>
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <section id="chats-view" class="tab-view">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h1>Private Conversations</h1>
+            <p>Direct communication threads automatically spawned upon hiring.</p>
+          </div>
+        </div>
+
+        <div class="chats-layout">
+          <div class="threads-sidebar">
+            <div class="threads-header">
+              <span>Active Threads</span>
+            </div>
+            <div class="threads-list" id="threads-list-container"></div>
+          </div>
+
+          <div class="chat-workspace" id="chat-workspace">
+            <div class="empty-state" id="chat-empty-state" style="margin: auto;">
+              <h3>Select a Conversation</h3>
+              <p>Choose an active chat thread from the left menu to start messaging.</p>
+            </div>
+
+            <div id="chat-active-panel" style="display: none; height: 100%; flex-direction: column;">
+              <div class="chat-active-header">
+                <div class="chat-header-info">
+                  <div class="poster-avatar" id="chat-partner-avatar"></div>
+                  <div class="chat-header-details">
+                    <h3 id="chat-partner-name-display">Partner Name</h3>
+                    <p id="chat-job-title-display">Job Title</p>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                  <button class="btn btn-secondary btn-sm" id="terminate-job-btn" style="color: rgb(64, 131, 233); border-color: rgb(190, 183, 180);">
+                    <span>Terminate Job</span>
+                  </button>
+                  <button class="btn btn-success btn-sm" id="complete-job-btn">
+                    <span>Rate & Complete Job</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="chat-messages-container" id="chat-messages-container"></div>
+
+              <form id="chat-send-form" class="chat-input-bar">
+                <input type="text" id="chat-input-text" class="form-control" placeholder="Type a message..." required autocomplete="off">
+                <button type="submit" class="btn btn-primary">Send</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="profile-view" class="tab-view">
+        <div class="view-header">
+          <div class="view-title-group">
+            <h1>User Profile</h1>
+            <p>Overview of ratings, stats, and historical reviews.</p>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-secondary" id="edit-profile-btn">Edit Details</button>
+            <button class="btn btn-secondary" id="profile-logout-btn" style="color: rgb(64, 131, 233); border-color: rgb(190, 183, 180);">Log Out</button>
+          </div>
+        </div>
+
+        <div class="profile-card">
+          <div class="profile-header-banner">
+            <div class="profile-avatar-large" id="profile-avatar"></div>
+            <div class="profile-info-details">
+              <div class="profile-name-row">
+                <h2 id="profile-name">Loading Profile...</h2>
+                <div class="profile-tags-inline">
+                  <span class="chip-tag" id="profile-age-tag">Age: --</span>
+                  <span class="chip-tag" id="profile-sex-tag">Sex: --</span>
+                </div>
+              </div>
+              <p class="profile-bio" id="profile-bio">Bio description goes here...</p>
+            </div>
+          </div>
+
+          <div class="profile-stats-grid">
+            <div class="stat-box">
+              <div class="stat-data">
+                <span class="stat-value" id="profile-rating-score">0.0</span>
+                <span class="stat-label">Overall Rating Score</span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-data">
+                <span class="stat-value" id="profile-completed-count">0</span>
+                <span class="stat-label">Completed Jobs</span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-data">
+                <span class="stat-value" id="profile-reviews-count">0</span>
+                <span class="stat-label">Customer Reviews</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="reviews-section">
+          <h3><span>Customer Reviews & Feedback</span></h3>
+          <div class="reviews-list" id="profile-reviews-list"></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="modal-overlay active" id="auth-modal">
+    <div class="modal-container">
+      
+      <div id="auth-entry-section">
+        <div class="modal-header" style="justify-content: center; text-align: center;">
+          <div>
+            <h2 style="font-size: 1.6rem; margin-bottom: 0.25rem;">Welcome to CpE FREELANCE</h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Sign in or create an account to start collaborating.</p>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+          <button class="btn btn-google" id="google-login-btn">
+            <span>Continue with Google</span>
+          </button>
+        </div>
+
+        <div class="auth-divider">
+          <span>OR EMAIL</span>
+        </div>
+
+        <div class="auth-tab-switch">
+          <button class="auth-tab-btn active" id="tab-signin-btn">Sign In</button>
+          <button class="auth-tab-btn" id="tab-signup-btn">Sign Up</button>
+        </div>
+
+        <form id="email-auth-form" style="margin-top: 1rem;">
+          <div class="form-group">
+            <label class="form-label" for="auth-email-input">Email Address</label>
+            <input type="email" id="auth-email-input" class="form-control" placeholder="name@domain.com" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="auth-password-input">Password</label>
+            <input type="password" id="auth-password-input" class="form-control" placeholder="••••••••" required minlength="6">
+          </div>
+
+          <div id="auth-error-msg" class="auth-error-text" style="display: none;"></div>
+
+          <button type="submit" class="btn btn-primary" id="email-submit-btn" style="width: 100%; margin-top: 0.5rem;">
+            Sign In
+          </button>
+        </form>
+      </div>
+
+      <div id="auth-onboarding-section" style="display: none;">
+        <div class="modal-header">
+          <div>
+            <h2>Complete Profile Registration</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Insert your profile details before navigating the marketplace.</p>
+          </div>
+        </div>
+
+        <form id="onboarding-form">
+          <div class="form-group">
+            <label class="form-label" for="user-name-input">Full Name</label>
+            <input type="text" id="user-name-input" class="form-control" placeholder="e.g. Alex Rivers" required>
+          </div>
+
+          <div class="duration-selector-row" style="margin-bottom: 1rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="user-age-input">Age</label>
+              <input type="number" id="user-age-input" class="form-control" placeholder="22" min="16" max="99" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label" for="user-sex-input">Sex / Gender</label>
+              <select id="user-sex-input" class="form-control" required>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Non-Binary">Non-Binary</option>
+                <option value="Prefer not to say">Prefer not to say</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="user-bio-input">Short Bio / Description</label>
+            <textarea id="user-bio-input" class="form-control" style="min-height: 80px;" placeholder="e.g. Full-stack developer skilled in Python, JS, and UI design..." required></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%;">Save Details & Enter App</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="applicants-modal">
+    <div class="modal-container" style="max-width: 600px;">
+      <div class="modal-header">
+        <div>
+          <h2>Applicant Queue</h2>
+          <p style="font-size: 0.85rem; color: var(--text-muted);" id="applicant-modal-job-title">Job Title</p>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('applicants-modal')">&times;</button>
+      </div>
+
+      <div id="applicants-list-container" style="max-height: 350px; overflow-y: auto;"></div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="rating-modal">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2>Job Completion & Seeker Rating</h2>
+        <button class="modal-close-btn" onclick="closeModal('rating-modal')">&times;</button>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem;" id="rating-target-text">
+        As the job poster, rate your experience working with the candidate:
+      </p>
+
+      <form id="rating-form">
+        <div class="star-rating-selector" id="star-rating-selector">
+          <span data-star="1">★</span>
+          <span data-star="2">★</span>
+          <span data-star="3">★</span>
+          <span data-star="4">★</span>
+          <span data-star="5" class="selected">★</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="rating-comment-input">Feedback & Review Comments</label>
+          <textarea id="rating-comment-input" class="form-control" placeholder="Describe how well the job was executed..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-success" style="width: 100%;">Submit Rating & Complete Job</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="script.js"></script>
+</body>
+</html>
