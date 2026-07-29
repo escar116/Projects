@@ -702,7 +702,6 @@ textarea.form-control {
 }
 
 .job-card:hover {
-  transform: translateY(-4px);
   border-color: rgb(50, 135, 250);
   box-shadow: 0 12px 30px rgba(190, 183, 180, 0.4);
 }
@@ -811,6 +810,19 @@ textarea.form-control {
   font-size: 0.85rem;
   font-weight: 600;
   color: rgb(64, 131, 233);
+}
+
+.clickable-user {
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.clickable-user:hover .poster-name,
+.clickable-user:hover h4,
+.clickable-user:hover h3,
+.clickable-user:hover .reviewer-name {
+  color: rgb(50, 135, 250);
+  text-decoration: underline;
 }
 
 .chats-layout {
@@ -1097,7 +1109,6 @@ textarea.form-control {
 }
 
 .applicant-details p {
-  font-size: 0.8rem;
   color: rgb(190, 183, 180);
 }
 

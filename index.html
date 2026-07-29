@@ -372,6 +372,57 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="public-profile-modal">
+    <div class="modal-container" style="max-width: 580px;">
+      <div class="modal-header">
+        <h2>User Profile</h2>
+        <button class="modal-close-btn" onclick="closeModal('public-profile-modal')">&times;</button>
+      </div>
+      
+      <div class="profile-card" style="box-shadow: none; margin-bottom: 1.25rem;">
+        <div class="profile-header-banner">
+          <div class="profile-avatar-large" id="pub-profile-avatar"></div>
+          <div class="profile-info-details">
+            <div class="profile-name-row">
+              <h2 id="pub-profile-name">User Name</h2>
+              <div class="profile-tags-inline">
+                <span class="chip-tag" id="pub-profile-age-tag">Age: --</span>
+                <span class="chip-tag" id="pub-profile-sex-tag">Sex: --</span>
+              </div>
+            </div>
+            <p class="profile-bio" id="pub-profile-bio">Bio description...</p>
+          </div>
+        </div>
+
+        <div class="profile-stats-grid">
+          <div class="stat-box">
+            <div class="stat-data">
+              <span class="stat-value" id="pub-profile-rating-score">0.0</span>
+              <span class="stat-label">Overall Rating Score</span>
+            </div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-data">
+              <span class="stat-value" id="pub-profile-completed-count">0</span>
+              <span class="stat-label">Completed Jobs</span>
+            </div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-data">
+              <span class="stat-value" id="pub-profile-reviews-count">0</span>
+              <span class="stat-label">Customer Reviews</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="reviews-section" style="box-shadow: none; max-height: 250px; overflow-y: auto;">
+        <h3 style="font-size: 1.05rem;"><span>Customer Reviews & Feedback</span></h3>
+        <div class="reviews-list" id="pub-profile-reviews-list"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="modal-overlay" id="applicants-modal">
     <div class="modal-container" style="max-width: 600px;">
       <div class="modal-header">

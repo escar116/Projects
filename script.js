@@ -153,6 +153,51 @@ function startLiveTimestampTimer() {
   }, 15000);
 }
 
+function openPublicProfileModal(userId) {
+  const user = appState.usersMap[userId] || (appState.currentUser && appState.currentUser.id === userId ? appState.currentUser : null);
+  if (!user) {
+    showToast("User profile not found", "warning");
+    return;
+  }
+
+  document.getElementById("pub-profile-avatar").textContent = user.avatar || "";
+  document.getElementById("pub-profile-name").textContent = user.name || "User";
+  document.getElementById("pub-profile-age-tag").textContent = `Age: ${user.age || '--'}`;
+  document.getElementById("pub-profile-sex-tag").textContent = `Sex: ${user.sex || '--'}`;
+  document.getElementById("pub-profile-bio").textContent = user.bio || "No bio provided.";
+
+  const ratings = user.ratings || [];
+  const avg = ratings.length > 0 ? (ratings.reduce((a, b) => a + b, 0) / ratings.length).toFixed(1) : "5.0";
+
+  document.getElementById("pub-profile-rating-score").textContent = `${avg} / 5.0`;
+  document.getElementById("pub-profile-completed-count").textContent = user.completedJobs || 0;
+  document.getElementById("pub-profile-reviews-count").textContent = (user.reviews || []).length;
+
+  const reviewsContainer = document.getElementById("pub-profile-reviews-list");
+  if (reviewsContainer) {
+    if (!user.reviews || user.reviews.length === 0) {
+      reviewsContainer.innerHTML = `
+        <div class="empty-state" style="padding: 1.5rem 1rem;">
+          <p>No customer reviews yet.</p>
+        </div>
+      `;
+    } else {
+      reviewsContainer.innerHTML = user.reviews.map((r) => `
+        <div class="review-item">
+          <div class="review-top">
+            <span class="reviewer-name">${r.reviewerName}</span>
+            <span class="review-stars">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}</span>
+          </div>
+          <p class="review-comment">"${r.comment}"</p>
+          <p class="review-date">${r.date}</p>
+        </div>
+      `).join("");
+    }
+  }
+
+  document.getElementById("public-profile-modal").classList.add("active");
+}
+
 function setupEventListeners() {
   document.querySelectorAll(".nav-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -194,30 +239,6 @@ function setupEventListeners() {
     });
   });
 
-  const postForm = document.getElementById("post-job-form");
-  if (postForm) {
-    postForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      handlePostJobSubmit();
-    });
-  }
-
-  const onboardingForm = document.getElementById("onboarding-form");
-  if (onboardingForm) {
-    onboardingForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      handleOnboardingSubmit();
-    });
-  }
-
-  const chatSendForm = document.getElementById("chat-send-form");
-  if (chatSendForm) {
-    chatSendForm.addEventListener("submit", (e) => {
-      e.preventDefault();
-      handleSendChatMessage();
-    });
-  }
-
   const starContainer = document.getElementById("star-rating-selector");
   if (starContainer) {
     starContainer.querySelectorAll("span").forEach((star) => {
@@ -243,6 +264,30 @@ function setupEventListeners() {
       }
     });
   });
+
+  const postForm = document.getElementById("post-job-form");
+  if (postForm) {
+    postForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      handlePostJobSubmit();
+    });
+  }
+
+  const onboardingForm = document.getElementById("onboarding-form");
+  if (onboardingForm) {
+    onboardingForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      handleOnboardingSubmit();
+    });
+  }
+
+  const chatSendForm = document.getElementById("chat-send-form");
+  if (chatSendForm) {
+    chatSendForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      handleSendChatMessage();
+    });
+  }
 
   const ratingForm = document.getElementById("rating-form");
   if (ratingForm) {
@@ -517,7 +562,7 @@ function renderJobsGrid() {
         </div>
 
         <div class="job-footer">
-          <div class="poster-mini">
+          <div class="poster-mini clickable-user" onclick="openPublicProfileModal('${job.posterId}')">
             <div class="poster-avatar">${poster.avatar || ''}</div>
             <span class="poster-name">${poster.name || 'User'}</span>
           </div>
@@ -640,7 +685,7 @@ function buildJobCardHTML(job, currentUser, category) {
       </div>
 
       <div class="job-footer">
-        <div class="poster-mini">
+        <div class="poster-mini clickable-user" onclick="openPublicProfileModal('${job.posterId}')">
           <div class="poster-avatar">${poster.avatar || ''}</div>
           <span class="poster-name">${poster.name || 'User'}</span>
         </div>
@@ -749,7 +794,7 @@ function openApplicantsModal(jobId) {
 
       return `
         <div class="applicant-item">
-          <div class="applicant-info">
+          <div class="applicant-info clickable-user" onclick="openPublicProfileModal('${appUser.id}')">
             <div class="profile-avatar-large" style="width: 48px; height: 48px; font-size: 1.5rem;">
               ${appUser.avatar || ''}
             </div>
@@ -894,8 +939,20 @@ function renderActiveChatPanel() {
   const partnerId = currentUser.id === chat.posterId ? chat.applicantId : chat.posterId;
   const partner = appState.usersMap[partnerId] || { name: "User", avatar: "" };
 
-  document.getElementById("chat-partner-avatar").textContent = partner.avatar || "";
-  document.getElementById("chat-partner-name-display").textContent = partner.name || "User";
+  const partnerAvatarEl = document.getElementById("chat-partner-avatar");
+  if (partnerAvatarEl) {
+    partnerAvatarEl.textContent = partner.avatar || "";
+    partnerAvatarEl.className = "poster-avatar clickable-user";
+    partnerAvatarEl.onclick = () => openPublicProfileModal(partnerId);
+  }
+
+  const partnerNameEl = document.getElementById("chat-partner-name-display");
+  if (partnerNameEl) {
+    partnerNameEl.textContent = partner.name || "User";
+    partnerNameEl.className = "clickable-user";
+    partnerNameEl.onclick = () => openPublicProfileModal(partnerId);
+  }
+
   document.getElementById("chat-job-title-display").textContent = `Task: ${job.title} (${job.status})`;
 
   const isPoster = currentUser.id === job.posterId;
